@@ -10,4 +10,6 @@ it is necessary to run at least several simulations for each combination of para
 
 The model must use the accompanied data. It comes in two forms: geographic (GIS) data are located in 'gis_data' directory (containing Chicago boundary files and others), and data on households, population and location of social services are located in 'data' directory. 
 
+![alt tag](https://github.com/mousterian/Thesis-NetLogo/blob/master/Chicago-IPVinterface.png)
+
 
