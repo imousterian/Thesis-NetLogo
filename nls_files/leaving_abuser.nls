@@ -1,0 +1,200 @@
+to calculate-leave-abuser
+
+    determine-probability-of-leaving-abuser 
+                                           
+    ifelse leftAbuser? = false
+      [ set currentlySafe? false ] 
+      [ calculate-become-homeless ]
+ 
+      
+end
+
+to determine-probability-of-leaving-abuser
+
+  let randValue random-float 1
+  let rangeSeveretyIncident false
+  let educationRange false
+  let harassmentLevel false
+  let powerControlLevel false
+  let healthLevel false
+  let lackOfDepression false
+  let booleanEmployedPTorFT 0
+  let booleanHomemaker 0
+  let booleanStudent 0
+  let supportNetwork false
+  let personalIncomeRange false
+  let mostSevereIncident false
+  let logIncidentsYear false
+  let severityBysupport false
+  
+  ifelse randValue < 0.24
+  [
+    set rangeSeveretyIncident 3 ]                             
+  [
+    ifelse randValue >= 0.24 and randValue < 0.47 
+    [ set rangeSeveretyIncident 4 ]                           
+    [ ifelse randValue >= 0.47 and randValue < 0.7
+      [ set rangeSeveretyIncident 2]                         
+      [ ifelse randValue >= 0.7 and randValue < 0.84
+        [ set rangeSeveretyIncident 5]                      
+        [ ifelse randValue >= 0.84 and randValue < 0.96
+          [ set rangeSeveretyIncident 6]                      
+          [ set rangeSeveretyIncident 1 ]                    
+        ]
+      ]
+    ]
+  ]
+  
+    
+  if (educationStatusTarget = 1) [set educationRange 1] 
+  if (educationStatusTarget >= 2 and educationStatusTarget <= 9) [set educationRange 2] 
+  if (educationStatusTarget >= 10 and educationStatusTarget <= 15) [set educationRange 3] 
+  if (educationStatusTarget >= 16 and educationStatusTarget <= 17) [set educationRange 4] 
+  if (educationStatusTarget >= 18 and educationStatusTarget <= 19) [set educationRange 5] 
+  if (educationStatusTarget = 20) [set educationRange 6] 
+  if (educationStatusTarget = 21)  [set educationRange 7]
+  if (studentStatusTarget = 16) [set educationRange 8] 
+  if (educationStatusTarget >= 22) [set educationRange 9] 
+        
+         
+  if (personalIncomeTarget <= 5000) [set personalIncomeRange 1]
+  if (personalIncomeTarget >= 5001 and personalIncomeTarget <= 10000)  [set personalIncomeRange 2]
+  if (personalIncomeTarget >= 10001 and personalIncomeTarget <= 20000) [set personalIncomeRange 3]
+  if (personalIncomeTarget >= 20001 and personalIncomeTarget <= 30000) [set personalIncomeRange 4]
+  if (personalIncomeTarget >= 30001 and personalIncomeTarget <= 40000) [set personalIncomeRange 5]
+  if (personalIncomeTarget >= 40001 and personalIncomeTarget <= 50000) [set personalIncomeRange 6]
+  if (personalIncomeTarget >= 50001 and personalIncomeTarget <= 60000) [set personalIncomeRange 7]
+  if (personalIncomeTarget >= 60001 and personalIncomeTarget <= 70000) [set personalIncomeRange 8]
+  if (personalIncomeTarget >= 70001) [ set personalIncomeRange 9 ]
+         
+  
+  set mostSevereIncident rangeSeveretyIncident 
+  
+  ifelse randValue < 0.215
+  [ set harassmentLevel 0 ]
+  [ ifelse randValue >= 0.215 and randValue < 0.342
+    [ set harassmentLevel 1 ]
+    [ ifelse randValue >= 0.342 and randValue < 0.435
+      [ set harassmentLevel 2]
+      [ ifelse randValue >= 0.435 and randValue < 0.522
+        [set harassmentLevel 3]
+        [ ifelse randValue >= 0.522 and randValue < 0.586
+          [ set harassmentLevel 4 ]
+          [ ifelse randValue >= 0.586 and randValue < 0.670
+            [ set harassmentLevel 5]
+            [ ifelse randValue >= 0.670 and randValue < 0.913
+              [ set harassmentLevel vary 6 10 ]
+            [ set harassmentLevel vary 11 19]
+            ]
+          ]
+        ]
+      ]
+    ]
+  ]
+
+  
+  ifelse randValue < 0.251
+  [ set powerControlLevel 5]
+  [ ifelse randValue >= 0.251 and randValue < 0.419
+    [ set powerControlLevel 0]
+    [ ifelse randValue >= 0.419 and randValue < 0.586
+      [ set powerControlLevel 4]
+      [ ifelse randValue >= 0.586 and randValue < 0.737
+        [ set powerControlLevel 3]
+        [ ifelse randValue >= 0.737 and randValue < 0.882
+          [ set powerControlLevel 1]
+          [set powerControlLevel 2]
+        ]
+      ]
+    ]
+  ]
+
+
+
+ ifelse randValue < 0.355
+ [ set healthLevel 3]
+ [ ifelse randValue >= 0.355 and randValue < 0.653
+   [set healthLevel 2]
+   [ ifelse randValue >= 0.653 and randValue < 0.811
+     [set healthLevel 4]
+     [ ifelse randValue >= 0.811 and randValue < 0.924
+       [set healthLevel 5]
+       [ set healthLevel 1]
+     ]
+   ]
+ ]
+ 
+
+  if booleanHispanic = 1 
+  [
+    ifelse randValue < 0.245
+    [ set lackOfDepression 0]
+    [ ifelse randValue >= 0.245 and randValue < 0.434
+      [ set lackOfDepression 3]
+      [ ifelse randValue >= 0.434 and randValue < 0.598
+        [ set lackOfDepression 2] 
+         [ ifelse randValue >= 0.598 and randValue < 0.755
+           [ set lackOfDepression 5]
+           [ ifelse randValue >= 0.755 and randValue < 0.887
+             [ set lackOfDepression 4]
+             [ set lackOfDepression 1]
+           ]
+         ]
+      ]
+    ]
+  ]
+
+  if booleanHispanic = 0
+  [
+    ifelse randValue < 0.426
+    [ set lackOfDepression 0]
+    [ ifelse randValue >= 0.426 and randValue < 0.639
+      [ set lackOfDepression 1]
+      [ ifelse randValue >= 0.639 and randValue < 0.762
+        [ set lackOfDepression 3] 
+         [ ifelse randValue >= 0.762 and randValue < 0.881
+           [ set lackOfDepression 2]
+           [ ifelse randValue >= 0.881 and randValue < 0.964
+             [ set lackOfDepression 4 ]
+             [ set lackOfDepression 5 ]
+           ]
+         ]
+      ]
+    ]
+  ]
+  
+  ifelse ( monthlyCountActsPerPerson > 0) [set logIncidentsYear ((log monthlyCountActsPerPerson 10) / 12 )] [set logIncidentsYear 0]
+  
+  if (employmentStatusTarget >= 1 and employmentStatusTarget <= 7) [ set booleanEmployedPTorFT 1 ]
+  if (employmentStatusTarget = 8) [ set booleanHomemaker 1 ] 
+  if (studentStatusTarget >= 15) [ set booleanStudent 1 ]  
+  set supportNetwork levelOfSupport 
+  set severityBysupport supportNetwork * mostSevereIncident
+  
+  
+  set leaving-abuser-variable-array array:from-list n-values 13 [0]
+  
+  array:set leaving-abuser-variable-array 0 logIncidentsYear          
+  array:set leaving-abuser-variable-array 1 mostSevereIncident        
+  array:set leaving-abuser-variable-array 2 harassmentLevel                                                                                                                                              
+  array:set leaving-abuser-variable-array 3 powerControlLevel                                                                             
+  array:set leaving-abuser-variable-array 4 healthLevel                                                                                                                                                             
+  array:set leaving-abuser-variable-array 5 lackOfdepression                                                                                                                                                              
+  array:set leaving-abuser-variable-array 6 educationRange           
+  array:set leaving-abuser-variable-array 7 personalIncomeRange     
+  array:set leaving-abuser-variable-array 8 booleanEmployedPTorFT    
+  array:set leaving-abuser-variable-array 9 booleanHomemaker         
+  array:set leaving-abuser-variable-array 10 booleanStudent              
+  array:set leaving-abuser-variable-array 11 supportNetwork          
+  array:set leaving-abuser-variable-array 12 severityBysupport      
+
+    
+  set resultOfCalculation calculate-regression leaving-abuser-variable-array coefficient-leaving-abuser-array constantSeekingHelp
+  let probabilityPersonLeftAbuser (exp(resultOfCalculation) / (1 + exp(resultOfCalculation))) / time-step
+  
+  set leftAbuser? boolean? probabilityPersonLeftAbuser
+     
+end
+
+
+

@@ -1,0 +1,504 @@
+extensions [array]
+
+patches-own [
+  totPOP 
+  numberBlack 
+  numberWhite 
+  numberHispanic 
+  densityBlack 
+  densityWhite 
+  densityHispanic ]
+  
+to setup-all-initial-household-and-person-data
+  
+  print "starting main setup "
+  type date-and-time 
+  print ""
+  
+  setup-coefficients
+
+  setup-major-household-data
+  
+  setup-assigning-friends
+  
+  setup-initial-shelter-residents
+  
+  type date-and-time print " main setup done"
+  
+  setup-racial-density-by-tract
+  
+end  
+
+to setup-major-household-data
+  
+  set month-count 0
+  set year-count 0
+  set week-count 0
+  set timeCount 0
+  
+  set abcd 1 
+    
+  set variables ["Average total" "Average for White" "Average for Black" "Average for Hispanic"]
+  set totalViolenceIncidenceRate array:from-list n-values 4 [0]
+  set targetPopCountsByRace array:from-list n-values 4 [0]
+  set totalPoliceCallRate array:from-list n-values 4 [0]
+
+  ask households [ 
+    
+    ifelse (xcor_home > min-pxcor and xcor_home < max-pxcor) [set xcor xcor_home ] [die]
+    ifelse (ycor_home > min-pycor and ycor_home < max-pycor) [ set ycor ycor_home ] [die]
+
+    set-target-list 
+    setup-array-helping-victims
+    set myShelter false
+    ]
+
+  ask households with [beenSelected = true]
+    [
+      
+        set numberOfHouseholdFriendsList []
+        set indexFriendByHouseholdList []
+        set friendsList [] 
+        set friendsList setup-number-of-friends     
+        set welfare-place-list-regular []
+                
+        set welfare-place-list1 []       
+        
+        let femaleIndex get-target-person-index isPotentialTargetList 
+        let maleIndex get-target-person-index isPotentialAbuserList 
+        
+        let _Frace item femaleIndex raceList
+        let _Fage item femaleIndex ageList
+        let _Fethnicity item femaleIndex isHispanicList
+        let _Mrace item maleIndex raceList
+        let _Methnicity item maleIndex isHispanicList
+        let _Mage item maleIndex ageList
+
+        let MfamilyContact item maleIndex friendsList
+        let FfamilyContact item femaleIndex friendsList
+        
+        set raceStatusTarget _Frace 
+        set ethnicityStatusTarget _Fethnicity
+        
+    
+        if (_Frace = 1 and _Fethnicity = 1) [set booleanHispanic 0 set booleanBlack 0 set booleanWhite 1 ]
+        if (_Frace = 2 and _Fethnicity = 1) [set booleanBlack 1 set booleanHispanic 0 set booleanWhite 0 ]
+        if (_Frace >= 1 and _Fethnicity >= 2) [set booleanHispanic 1 set booleanBlack 0 set booleanWhite 0 ]  
+        if (_Frace >= 3 and _Fethnicity = 1) [die] ;no B, W, or H => not sampled
+                  
+              
+        array:set targetPopCountsByRace 0 array:item targetPopCountsByRace 0 + 1
+    
+        if (booleanWhite = 1)
+        [
+          array:set targetPopCountsByRace 1 array:item targetPopCountsByRace 1 + 1
+        ]
+        if booleanBlack = 1
+        [
+          array:set targetPopCountsByRace 2 array:item targetPopCountsByRace 2 + 1
+        ]
+    
+        if booleanHispanic = 1
+        [
+          array:set targetPopCountsByRace 3 array:item targetPopCountsByRace 3 + 1
+        ]
+    
+    
+        let _item1 item femaleIndex friendsList  
+        let q array:to-list array:from-list n-values _item1 [false]      
+        set numberOfHouseholdFriendsList lput q numberOfHouseholdFriendsList
+        set indexFriendByHouseholdList lput q indexFriendByHouseholdList
+        set numberOfHouseholdFriendsList reduce [?] numberOfHouseholdFriendsList
+        set indexFriendByHouseholdList reduce [?] indexFriendByHouseholdList
+       
+        set currentlyInShelter? false
+        set currentlySafe? false 
+       
+        setup-violence-array _Fage _Frace _Fethnicity _Mage _Mrace _Methnicity MfamilyContact FfamilyContact
+        setup-employment-array 
+        setup-police-array _Fage _Frace    
+
+    ]
+end
+       
+to setup-assigning-friends 
+     
+ loop
+ [  
+
+  let lst report-updated-household-list 
+  let newLst []
+  ask households [set newLst fput self newLst]
+  
+  if length lst = 0 [stop]
+   
+  foreach lst
+  [
+    ask ?1        
+    [
+      foreach n-values length numberOfHouseholdFriendsList [?]
+      [
+        let friendsNumberTrackingList item ? numberOfHouseholdFriendsList              
+        let flaggedHousehold one-of newLst
+        let falseCheck item ? numberOfHouseholdFriendsList                      
+        if (falseCheck = false) [ set numberOfHouseholdFriendsList replace-item ? numberOfHouseholdFriendsList flaggedHousehold ]                         
+      ]                 
+      setup-assign-friend-index             
+      ]           
+  ]
+ ]
+end 
+
+
+to-report report-updated-household-list 
+ 
+  let result []
+  
+  ask  households with [beenSelected = true] 
+  [
+      let x filtered-household-lst indexFriendByHouseholdList
+      set result fput x result
+  ]    
+  set result remove-duplicates result 
+  set result remove false result
+  report result
+
+end
+
+to-report filtered-household-lst [ list1 ]
+
+  let t filter [? = false] list1
+  if t != [] 
+    [ let m reduce [?] t
+      if m = false [report self]
+    ]                      
+         
+  report false
+   
+end 
+
+
+to setup-assign-friend-index
+ 
+ foreach n-values length indexFriendByHouseholdList [?]
+ [ 
+   let item1 ?
+   let falseCheck item ? indexFriendByHouseholdList
+   let index false
+         
+   let flaggedHousehold item ? numberOfHouseholdFriendsList
+                        
+   if (flaggedHousehold != false)
+     [
+         set index get-persons-probability flaggedHousehold
+     ]                                                    
+
+   if (falseCheck = false) [ set indexFriendByHouseholdList replace-item ? indexFriendByHouseholdList index ]
+   if (index = false and falseCheck = false )  [ set numberOfHouseholdFriendsList replace-item ? numberOfHouseholdFriendsList index ]    
+
+ ]
+ 
+end
+
+to-report get-persons-probability [flaggedHousehold]
+  let result false
+  let h filter [? >= 18] [ageList] of flaggedHousehold
+  
+  foreach n-values length h [?]
+    [                 
+      let personIndex ?
+      set result flag-person 0.5 personIndex        
+      if (result != false) [
+        report result
+        stop ]     
+    ]  
+
+    report result
+end
+
+
+to-report flag-person [prob index]
+  
+  let result false
+  let randValue random-float 1
+  if randValue < prob
+    [ report index ] 
+  
+  report result
+    
+end
+
+to setup-police-array [_Fage _Frace]
+  let _other 0
+ 
+  ifelse (_Frace >= 3) [set _other 1] [set _other 0]
+  
+  let _age 0
+  if _Fage >= 30 [set _age 1]
+  if _Fage <= 18 [set _age 1]
+  
+  let booleanOffenderUsedAlcohol array:item violence-variable-array 14
+  let booleanVictimUsedAlcohol array:item violence-variable-array 12
+  
+  set calling-police-variable-array array:from-list n-values 41 [0]
+  array:set calling-police-variable-array 10 booleanOffenderUsedAlcohol                   
+  array:set calling-police-variable-array 13 booleanVictimUsedAlcohol                     
+  array:set calling-police-variable-array 18 1                              
+  array:set calling-police-variable-array 27 _age                        
+  array:set calling-police-variable-array 28 _age                        
+  array:set calling-police-variable-array 32 booleanBlack 
+  array:set calling-police-variable-array 33 booleanHispanic 
+  array:set calling-police-variable-array 34 booleanWhite     
+end
+
+to-report setup-number-of-friends 
+   let result []
+       
+   foreach ageList
+     [
+       let randValue random-float 1
+       let _friends 0
+      
+      ifelse randValue < 0.27 
+      [ set _friends vary 10 12]          
+      [ ifelse randValue >= 0.27 and randValue < 0.45 
+        [set _friends vary 6 9]     
+        [ ifelse randValue >= 0.45 and randValue < 0.62 
+          [set _friends 5] 
+          [ ifelse randValue >= 0.62 and randValue < 0.74 
+            [ set _friends 4]              
+            [ ifelse randValue >= 0.74 and randValue < 0.85 
+              [ set _friends 3]
+              [ ifelse randValue >= 0.85 and randValue < 0.93 
+                [ set _friends 2]          
+                [ ifelse  randValue >= 0.93 and randValue < 0.99
+                  [ set _friends 1]      
+                  [ set _friends 0]  
+                ]
+              ]
+            ]
+          ]
+        ]
+      ]
+      
+      set result lput _friends result
+    ]
+  report result
+  
+end
+
+to setup-employment-array
+    
+  set availableForJobSearch true
+    
+  let booleanNoCar false
+  let booleanLowEducation false
+  
+  ifelse HUPAC_status = 1 
+    [
+      set booleanChild HUPAC_status ]
+    [
+     set booleanChild 0 
+    ]
+    
+    ifelse (VEH_status = 0)
+    [
+      set booleanNoCar 1]
+    [ set booleanNoCar 0]
+    
+
+    ifelse (educationStatusTarget <= 17) [set booleanLowEducation 1] [set booleanLowEducation 0]
+    ifelse (englishStatusTarget >= 3 and englishStatusTarget <= 4) [ set booleanEnglishDif 1 ][ set booleanEnglishDif 0 ] 
+ 
+
+  
+  set variable-array-low-income-mother-emplt array:from-list n-values 5 [0]
+
+  array:set variable-array-low-income-mother-emplt 0 booleanLowEducation             
+  array:set variable-array-low-income-mother-emplt 1 booleanEnglishDif     
+  array:set variable-array-low-income-mother-emplt 2 booleanNoCar               
+  array:set variable-array-low-income-mother-emplt 3 booleanChild               
+  array:set variable-array-low-income-mother-emplt 4 0        
+  
+end
+
+
+to setup-violence-array [_Fage _Frace _Fethnicity _Mage _Mrace _Methnicity MfamilyContact FfamilyContact ]
+  
+
+  let booleanMrole false
+  let booleanFrole false
+  let booleanCohabiting false
+  let booleanChildUnder5 false
+  let Festeem false
+  let Mesteem false
+  let relationshipDuration false
+  let partnersDrugProblem false 
+  let booleanFDrugProblem false
+  let booleanCrisisSupport false
+
+  let coupleFriends false
+  let numberSocialOutings false
+   
+  ifelse HUPAC_status = 1 
+    [
+      set booleanChildUnder5 HUPAC_status ]
+    [ set booleanChildUnder5 0 ]
+
+  let HHincomeTenths HINCP_status / 1000 
+  let F%income false
+  ifelse (HINCP_status > 0) [set F%income personalIncomeTarget / HINCP_status * 10 ][set F%income personalIncomeTarget / 10]                                                              
+
+  let randValue random-float 1
+  ifelse (randValue < 0.5) [set booleanCrisisSupport 1] [set booleanCrisisSupport 0]
+  ifelse (randValue < 0.5) [set booleanMrole 1] [set booleanMrole 0]
+  ifelse (randValue < 0.425) [set booleanFrole 1] [set booleanFrole 0]
+
+  ifelse randValue < 0.671
+    [ set Festeem 3]
+    [ifelse randValue >= 0.671 and randValue < 0.884
+      [set Festeem 2]
+      [ifelse randValue >= 0.884 and randValue < 0.96
+        [ set Festeem 1 ]
+        [ set Festeem 0 ]
+      ]
+    ]
+      
+  ifelse randValue < 0.663
+    [set Mesteem 3]
+    [ifelse randValue >= 0.663 and randValue < 0.872
+      [set Mesteem 2]
+      [ifelse randValue >= 0.872 and randValue < 0.95
+        [ set Mesteem 1]
+        [set Mesteem 0 ]
+      ]
+    ]
+    
+  if MV_status = 1 [ set relationshipDuration 1 ]
+  if MV_status = 2 [ set relationshipDuration vary 1 2 ] 
+  if MV_status = 3 [ set relationshipDuration vary 2 4 ]
+  if MV_status = 4 [ set relationshipDuration vary 5 9 ]
+  if MV_status = 5 [ set relationshipDuration vary 10 19 ]
+  if MV_status = 6 [ set relationshipDuration vary 20 29 ]
+  if MV_status = 7 [ set relationshipDuration vary 30 39 ]
+       
+  set coupleFriends MfamilyContact + FfamilyContact
+  
+  if (coupleFriends = 0)[ set numberSocialOutings 0]
+  if (coupleFriends > 0 and coupleFriends <= 5)[ set numberSocialOutings 1]
+  if (coupleFriends > 5 and coupleFriends <= 10)[ set numberSocialOutings 2]
+  if (coupleFriends > 10 and coupleFriends <= 15)[ set numberSocialOutings 3]
+  if (coupleFriends > 15)[ set numberSocialOutings 4 ]   
+       
+       
+  set partnersDrugProblem substance-abuse-men _Mrace _Methnicity _Mage 
+  set booleanFDrugProblem substance-abuse-women  _Frace _Fethnicity _Fage
+      
+  
+  ifelse (HHT_status = 1 ) [ set booleanCohabiting 1 ] [set booleanCohabiting 0]    
+  
+  set violence-variable-array array:from-list n-values 17 [0]
+  
+  array:set violence-variable-array 0  booleanBlack                                                                                                                                                    
+  array:set violence-variable-array 1  booleanHispanic                                                                                                                                                  
+  array:set violence-variable-array 2  HHincomeTenths             
+  array:set violence-variable-array 3  F%income                                                                                  
+  array:set violence-variable-array 4  booleanMrole              
+  array:set violence-variable-array 5  booleanFrole              
+  array:set violence-variable-array 6  booleanChildUnder5        
+  array:set violence-variable-array 7  booleanCohabiting          
+  array:set violence-variable-array 8  relationshipDuration              
+  array:set violence-variable-array 9  MFamilyContact               
+  array:set violence-variable-array 10 FFamilyContact               
+  array:set violence-variable-array 11 numberSocialOutings                                                                                  
+  array:set violence-variable-array 12 booleanCrisisSupport     
+  array:set violence-variable-array 13 booleanFDrugProblem 
+  array:set violence-variable-array 14 partnersDrugProblem    
+  array:set violence-variable-array 15 Mesteem                
+  array:set violence-variable-array 16 Festeem                
+  
+   
+end
+
+to setup-array-helping-victims
+  
+  let childhoodExposureIPV false
+
+  let randValue random-float 1
+  ifelse randValue < 0.37 [set childhoodExposureIPV 1][set childhoodExposureIPV 0]
+  
+  set helping-victims-variable-array array:from-list n-values 7 [0]
+                                                                                                                                         
+  array:set helping-victims-variable-array 4 childhoodExposureIPV            
+  
+end
+ 
+to setup-initial-shelter-residents
+ 
+  let lst []
+  ask households with [beenSelected = true] [set lst lput self lst]
+  
+  ask shelters
+  [   
+    let clientList array:to-list array:from-list n-values availableBeds [false]         
+    foreach n-values length clientList [?]
+    [
+      let flaggedHouseholds one-of lst
+      set clientList replace-item ? clientList flaggedHouseholds
+      create-link-to item ? clientList
+      ask links [ hide-link ]    
+      set availableBeds availableBeds - 1
+      ask item ? clientList
+      [
+        set currentlyInShelter? true
+        set currentlySafe? true
+        set shelterClock vary 5 12          
+      ]
+      ask out-link-neighbors [set myShelter myself]
+    ]
+  ]
+
+
+end
+  
+to setup-racial-density-by-tract   
+    
+      
+  type date-and-time type " " print "starting setting density"
+  ask patches  
+    [ 
+
+       set totPop count households-here
+       set numberBlack count households-here with [ raceStatusTarget = 2 and ethnicityStatusTarget = 1 ]                           
+       set numberWhite count households-here with [ raceStatusTarget = 1 and ethnicityStatusTarget = 1 ]                           
+       set numberHispanic count households-here with [ raceStatusTarget >= 1 and ethnicityStatusTarget >= 2 ]                       
+    ]
+    
+  let v 0 
+  while [v <= 873]
+    [
+      let _hispanics sum [numberHispanic] of patches with [chicago-tracts = v]
+      let _whites sum [numberWhite] of patches with [chicago-tracts = v]
+      let _blacks sum [numberBlack] of patches with [chicago-tracts = v]       
+      let values2 sum [totPop] of patches with [chicago-tracts = v]
+       
+      ask patches with [chicago-tracts = v] [
+        if values2 > 0
+          [
+            set densityBlack _blacks / values2 * 100
+            set densityWhite _whites / values2 * 100
+            set densityHispanic _hispanics / values2 * 100 
+          ]
+          
+      ]
+      set v v + 1 
+    ]
+  type date-and-time type " " print "finished setting density"
+
+end
+
+   
+   
+          
+
+     

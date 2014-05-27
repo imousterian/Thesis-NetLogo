@@ -1,0 +1,47 @@
+
+globals [
+  convert-model2EastingMultiplier
+  convert-model2NorthingMultiplier
+  convert-model2AverageMultiplier
+  convert-modelCenterEasting
+  convert-modelCenterNorthing
+]
+
+to Convert-Setup [ worldList ]
+    let minEasting item 0 worldList
+    let maxEasting item 1 worldList
+    let minNorthing item 2 worldList
+    let maxNorthing item 3 worldList
+
+    set convert-modelCenterEasting (maxEasting + minEasting) / 2.0
+    set convert-modelCenterNorthing (maxNorthing + minNorthing) / 2.0
+    set convert-model2EastingMultiplier (maxEasting - minEasting) / (max-pxcor - min-pxcor)
+    set convert-model2NorthingMultiplier (maxNorthing - minNorthing) / (max-pycor - min-pycor)
+    set convert-model2AverageMultiplier (convert-model2NorthingMultiplier + convert-model2EastingMultiplier) / 2.0
+
+end
+
+
+to-report Convert-Px2Easting [ px ]
+  report px * convert-model2EastingMultiplier + convert-modelCenterEasting
+end
+
+to-report Convert-Py2Northing [ py ]
+  report py * convert-model2NorthingMultiplier + convert-modelCenterNorthing
+end
+
+to-report Convert-Easting2Px [ worldEasting ]
+  report (worldEasting - convert-modelCenterEasting) /  convert-model2EastingMultiplier
+end
+
+to-report Convert-Northing2Py [ worldNorthing ]
+  report (worldNorthing - convert-modelCenterNorthing) /  convert-model2NorthingMultiplier 
+end
+
+to-report Convert-ModelDistance2World [ modelDistance ]
+  report modelDistance * convert-model2AverageMultiplier
+end
+
+to-report Convert-WorldDistance2Model [ worldDistance ]
+  report worldDistance / convert-model2AverageMultiplier
+end

@@ -1,0 +1,197 @@
+to make-decision-visit-shelter
+
+  let probVisitShelter 0
+  let cultural_sensitivity 0
+  let tempShelter 0
+  
+  if currentlyInShelter? = false
+  [          
+    
+    let q 0
+  
+    let shelterList []  
+    set shelterList [ self ] of shelters
+    set shelterList sort-by [[ distance myself ] of ?1 < [ distance myself ] of ?2 ] shelters 
+   
+    foreach shelterList
+    [   
+      set tempShelter ?   
+        
+      ;predominantly White tracts 
+      if ([[densityBlack] of patch-here] of tempShelter <= 10) and ([[densityHispanic] of patch-here] of tempShelter <= 10) 
+      [
+        if (booleanWhite = 1)
+        [ set cultural_sensitivity 1 ]
+        
+        if (booleanHispanic = 1)
+        [ set cultural_sensitivity cultural-sensitivity / 100 ]
+        
+        if (booleanBlack = 1)
+        [ set cultural_sensitivity cultural-sensitivity / 100 ]                              
+      ]
+           
+      ; predominantly black tracts
+      if [[densityBlack] of patch-here] of tempShelter > 50     
+      [
+          if (booleanWhite = 1)
+          [ set cultural_sensitivity  cultural-sensitivity / 100 ]
+                   
+          if (booleanHispanic = 1)
+          [ set cultural_sensitivity cultural-sensitivity / 100 ]
+          
+          if (booleanBlack = 1)
+          [ set cultural_sensitivity 1 ]          
+        
+      ]
+      
+      ;mixed/fully integrated neighborhoods
+      
+      if ([[densityBlack] of patch-here] of tempShelter > 10 and [[densityBlack] of patch-here] of tempShelter <= 50)
+      [
+        if (booleanWhite = 1)
+        [ set cultural_sensitivity 1 ]
+        
+        if (booleanHispanic = 1)
+        [ set cultural_sensitivity 1 ]
+        
+        if (booleanBlack = 1)
+        [ set cultural_sensitivity 1 ]
+                              
+      ]
+      
+      ;mainly hispanic neighborhoods
+      if ([[densityHispanic] of patch-here] of tempShelter > 10 and [[densityBlack] of patch-here] of tempShelter < 10)
+      [
+        if (booleanWhite = 1)
+        [ set cultural_sensitivity  cultural-sensitivity / 100 ]
+        
+        if (booleanHispanic = 1)
+        [ set cultural_sensitivity 1 ]
+        
+        if (booleanBlack = 1)
+        [  set cultural_sensitivity  cultural-sensitivity / 100 ]
+                     
+      ]           
+                                
+      let _myDistance [distance myself]  of tempShelter  
+      let _myDistanceConverted _myDistance * factor * 0.001                          
+
+
+      set probVisitShelter (0.525 * exp(-0.11 * _myDistanceConverted))    
+      let final_decision probVisitShelter * cultural_sensitivity
+      set visitedShelter? boolean? final_decision
+       
+      if visitedShelter? = true and currentlyInShelter? = false
+      [                 
+        ask tempShelter [ create-link-to myself ]
+        ask links [ hide-link ]       
+         
+        ask tempShelter
+        [
+          set #requests #requests + 1
+          if  availableBeds >= 0 and availableBeds <= totalBeds
+            [
+              if (count out-link-neighbors <= availableBeds) 
+              [
+                ask out-link-neighbors 
+                [
+                  set gotService? true
+                  set currentlyInShelter? true   
+                  set currentlySafe? true
+                  set isHomeless? false   
+                  set myShelter tempShelter
+                ]      
+              ]    
+         
+              if (count out-link-neighbors > availableBeds) 
+              [
+                let requesters out-link-neighbors
+                let lucky availableBeds  
+                ask n-of lucky requesters 
+                [
+                  set gotService? true
+                  set currentlyInShelter? true
+                  set currentlySafe? true
+                  set isHomeless? false
+                  set myShelter tempShelter
+                ]
+              ]
+            ]
+                               
+          ask out-link-neighbors
+            [
+              if visitedShelter? = true and gotService? = false    
+              [
+                ask my-in-links [die]
+              ]
+            ]
+            
+          if [gotService?] of myself = true  [ set availableBeds availableBeds - 1] 
+        ]
+  
+      ]
+      
+    ]
+    
+  ]  
+
+end
+      
+to-report determine-devision-of-staying-in-shelter
+  
+  let decisionHowLongToStay false
+         
+  if povertyStatusTarget <= 100 and personalIncomeTarget >= 16640 
+    [  set decisionHowLongToStay ( random [ maxShelterTime ] of myShelter ) + 1 ]
+     
+  if povertyStatusTarget > 100
+    [  set decisionHowLongToStay ( random [ maxShelterTime ] of myShelter ) + 1 ]
+     
+  if povertyStatusTarget <= 100 and personalIncomeTarget < 16640
+    [ set decisionHowLongToStay [ maxShelterTime ] of myShelter ]
+
+  
+  report decisionHowLongToStay
+  
+end
+  
+to determine-how-long-to-stay-in-shelter 
+
+  let decisionHoWlongToStay determine-devision-of-staying-in-shelter
+    
+  if shelterClock >= decisionHowLongToStay         
+    [       
+      set currentlyInShelter? false  
+      set currentlySafe? false
+      set shelterClock 0   
+      set myShelter false  
+    
+      ask in-link-neighbors [ set availableBeds availableBeds + 1 ]  
+       
+      ask my-in-links [die]                                
+       
+      if povertyStatusTarget <= 100 and personalIncomeTarget < 16640                          
+        [                                                  
+          set currentlySafe? false                          
+          set isHomeless? true 
+          set in-need-for-home true 
+          set randHomelessTime random time-step    
+           
+        ]
+       
+      if povertyStatusTarget <= 100 and personalIncomeTarget >= 16640                     
+        [                                       
+          set currentlySafe? true                         
+          set isHomeless? false
+        ]
+       
+      if povertyStatusTarget > 100            
+        [
+          set currentlySafe? true         
+          set isHomeless? false
+        ]  
+               
+    ]     
+
+end
+

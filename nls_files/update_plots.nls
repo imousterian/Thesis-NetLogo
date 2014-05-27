@@ -1,0 +1,51 @@
+
+to update-all-plots
+     
+if timeCount = (time-step - 1)
+[    
+  set-current-plot "Annual incident rate by race"
+  let items length variables
+  foreach n-values items [?]
+    [                          
+      let name item ? variables         
+      set-current-plot-pen name     
+      plot 1000.0 * array:item totalViolenceIncidenceRate ? / array:item targetPopCountsByRace ?                   
+    ]   
+
+  set-current-plot "Annual police calls"
+
+  foreach n-values items [?]
+    [                          
+      let name item ? variables         
+      set-current-plot-pen name     
+      plot 1000.0 * array:item totalPoliceCallRate ? / array:item targetPopCountsByRace ?                   
+    ]     
+]
+
+Update-Map
+
+end
+
+to Update-Map
+  ask households [ set color blue + 3  set size .75 ]
+
+  if (Variable-to-Display = "isHurtPhysically?")        [ ask households with [ isHurtPhysically? = true]  [ set size 2  set color red ] ]
+  if (Variable-to-Display = "isHurtInjuriously?")       [ ask households with [ isHurtInjuriously? = true ] [ set size 2  set color red ] ]
+  if (Variable-to-Display = "receivedInformalSupport?") [ ask households with [ receivedInformalSupport? = true ] [ set size 2  set color red ] ]
+  if (Variable-to-Display = "foundChildCare?")          [ ask households with [ foundChildCare? = true ] [ set size 2  set color red ] ]
+  if (Variable-to-Display = "foundFinAid?")             [ ask households with [ foundFinAid? = true ] [ set size 2  set color red ] ]
+  if (Variable-to-Display = "foundHouseAid?")           [ ask households with [ foundHouseAid? = true ] [ set size 2  set color red ] ]
+  if (Variable-to-Display = "foundHomelessAid?")        [ ask households with [ foundHomelessAid? = true ] [ set size 2  set color red ] ]
+  if (Variable-to-Display = "victimCalledPolice?")      [ ask households with [ victimCalledPolice? = true ] [ set size 2  set color red ] ]
+  if (Variable-to-Display = "lowIncomeMomFoundJob?")    [ ask households with [ lowIncomeMomFoundJob? = true ] [ set size 2  set color red ] ]
+  if (Variable-to-Display = "talkedToFriend?")          [ ask households with [ talkedToFriend? = true ] [ set size 2  set color red ] ]
+  if (Variable-to-Display = "currentlyInShelter?")      [ ask households with [ currentlyInShelter? = true ] [ set size 2  set color red ] ]
+  if (Variable-to-Display = "gotService?")              [ ask households with [ gotService? = true ] [ set size 2  set color red ] ]
+  if (Variable-to-Display = "leftAbuser?")              [ ask households with [ leftAbuser? = true ] [ set size 2  set color red ] ]
+  if (Variable-to-Display = "isHomeless?")              [ ask households with [ isHomeless? = true ] [ set size 2  set color red ] ]
+  if (Variable-to-Display = "visitedShelter?")          [ ask households with [ visitedShelter? = true ] [ set size 2  set color red ] ]
+  if (Variable-to-Display = "visitedServiceLocation?")  [ ask households with [ visitedServiceLocation? = true ] [ set size 2  set color red ] ]
+  if (Variable-to-Display = "foundEducService?")        [ ask households with [ foundEducService? = true ] [ set size 2  set color red ] ]
+  if (Variable-to-Display = "currentlySafe?")           [ ask households with [ currentlySafe? = true ] [ set size 2  set color red ] ]
+end 
+

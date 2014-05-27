@@ -1,0 +1,364 @@
+
+households-own [ 
+
+  xcor_home
+  ycor_home  
+  search-distance
+  HHT_status
+  VEH_status
+  HINCP_status
+  HUPAC_status
+  MV_status
+  Partner_status
+  beenSelected  
+  femaleIndexTarget    
+  raceStatusTarget
+  ethnicityStatusTarget  
+  NP 
+  maleItem1 
+  relationshipItem1  
+  booleanChild
+  booleanEnglishDif  
+  booleanHispanic
+  booleanBlack
+  booleanWhite  
+  povertyStatusTarget
+  personalIncomeTarget
+  employmentStatusTarget
+  educationStatusTarget
+  englishStatusTarget
+  studentStatusTarget  
+  totalViolenceActs
+  violence-variable-array
+  variable-array-low-income-mother-emplt
+  calling-police-variable-array    
+  leaving-abuser-variable-array
+  helping-victims-variable-array  
+  ageList
+  isMaleList
+  isRelatedList  
+  raceList
+  isHispanicList
+  personalIncomeList
+  employStatusList
+  povertyStatusList
+  englishKnowledgeList
+  educationStatusList
+  studentStatusList  
+  isPotentialTargetList
+  isPotentialAbuserList
+  numberOfHouseholdFriendsList
+  indexFriendByHouseholdList    
+  friendsList  
+  monthlyCountActsPerPerson
+  monthlyPhysicalInjuries
+  monthlyInjuriousInjuries
+  foundOtherAid?    
+  randHomelessTime
+  lifeTimeExposure  
+  welfare-place-list-regular
+  welfare-place-selected
+  isHurtPhysically?                 
+  isHurtInjuriously?  
+  receivedInformalSupport?            
+  childCareClock
+  foundChildCare?
+  foundFinAid?
+  foundHouseAid?
+  foundHomelessAid?
+  in-need-for-money
+  in-need-for-home
+  in-need-for-education
+  in-need-for-childcare    
+  welfare-place-list1
+  welfare-place-list1a
+  householdIncome
+  myShelter  
+  victimCalledPolice?            
+  lowIncomeMomFoundJob?
+  talkedToFriend?
+  levelOfSupport  
+  shelterClock 
+  homelessClock  
+  currentlyInShelter?
+  gotService?
+  monthlyPoliceCalls
+  leftAbuser?                             
+  isHomeless?                              
+  visitedShelter?  
+  visitedServiceLocation?
+  foundEducService?
+  educationClock
+  availableForJobSearch
+  currentlySafe?
+  ]
+
+to set-target-list
+      
+  if (HHT_status = 1 or (Partner_status = 2 or Partner_status = 4))
+    [
+      set isPotentialTargetList find-this-target 2
+      set isPotentialAbuserList find-this-target 1 
+    ]
+    
+  if (member? true isPotentialTargetList) [ set beenSelected true ] 
+      
+end
+
+to-report find-this-target [ choice ] 
+  
+  let result []
+  
+  foreach n-values length ageList [?]
+  [
+    set result lput false result    
+    let maleItem item ? isMaleList
+    let relationshipItem item ? isRelatedList
+    let replacedItem ?
+    
+    if (maleItem = choice and (relationshipItem = 0 or relationshipItem = 1 or relationshipItem = 13))
+    [ set result replace-item replacedItem result true ]
+  ]
+  
+  report result
+    
+end
+
+
+to set-values-person-file [ list1 list2 first-value second-value ]
+  
+  if (first-value = "AGEP"  ) [set ageList lput read-from-string second-value ageList ]      
+  if (first-value = "SEX"  ) [ set isMaleList lput read-from-string second-value isMaleList set maleItem1 read-from-string second-value ]
+  if (first-value = "REL"  ) [ set isRelatedList lput read-from-string second-value isRelatedList set relationshipItem1 read-from-string second-value ]            
+  if (first-value = "HISP"  ) [ set isHispanicList lput read-from-string second-value isHispanicList ]           
+  if (first-value = "RAC1P"  ) [ set raceList lput read-from-string second-value raceList ]
+  
+  let maleIndex position "SEX" list1 
+  let relIndex position "REL" list1
+  let empIndex position "COW" list1
+  let engIndex position "ENG" list1
+  let studIndex position "SCHG" list1
+  let educIndex position "SCHL" list1
+  let incomeIndex position "persons_income" list1
+  let povIndex position "POVPIP" list1
+  
+  if (HHT_status = 1 or (Partner_status = 2 or Partner_status = 4))
+  [      
+    if (item relIndex list2 = "0" or item relIndex list2 = "1" or item relIndex list2 = "13")
+    [
+      if (item maleIndex list2 = "2") 
+      [ 
+        set employmentStatusTarget read-from-string item empIndex list2 
+        set englishStatusTarget read-from-string item engIndex list2
+        set studentStatusTarget read-from-string item studIndex list2
+        set educationStatusTarget read-from-string item educIndex list2
+        set personalIncomeTarget read-from-string item incomeIndex list2
+        set povertyStatusTarget read-from-string item povIndex list2     
+      ]
+    ]
+  ]
+
+end
+
+
+to-report split-on-comma [str]
+
+  let result []
+
+  let next-comma-location position "," str
+   
+  while [ next-comma-location != false ]
+  [
+
+    let element substring str 0 next-comma-location 
+
+    set str substring str (next-comma-location + 1) length str
+    
+    set result lput element result
+
+    set next-comma-location position "," str 
+    
+  ]
+
+   let element substring str 0 length str
+
+   set result lput element result
+  
+  report result 
+end
+
+to-report get-target-person-index [ target-list ]  
+  
+  foreach n-values length target-list [?]
+  [
+    let target item ? target-list
+    if target = true
+    [
+      report ?
+      stop
+    ]
+  ]
+  
+  report false
+  
+end
+
+to-report get-target-household-index [ target-list target ]
+  
+  foreach n-values length target-list [?]
+  [
+    let search item ? target-list
+    if search = target
+    [
+      report ?
+      stop
+    ]
+  ] 
+  report false
+  
+end
+
+
+to load-in-households-and-people [file-name1 file-name2]
+
+  let counter 0 
+  let summ 0
+  set summ count households
+  
+  let header1 0
+  let header2 0
+  let lines 0
+  
+  ifelse file-name1 = false 
+    [ carefully 
+      [ set file-name1 user-file 
+        file-open file-name1 
+        set lines calculate-remaining-lines 
+        ]  
+        [ stop ] 
+    ][        
+      file-open file-name1
+      set lines calculate-remaining-lines 
+      ]
+  
+  file-close-all 
+  
+  ifelse file-name1 = false 
+    [ carefully 
+      [ set file-name1 user-file 
+        file-open file-name1 
+        set header1 split-on-comma file-read-line  ]  
+        [ stop ] 
+    ][        
+      file-open file-name1
+      set header1 split-on-comma file-read-line ]
+ 
+       
+  ifelse file-name2 = false 
+    [ carefully 
+      [ set file-name2 user-file 
+        file-open file-name2 
+        set header2 split-on-comma file-read-line ]
+        [ stop ] 
+    ][
+      file-open file-name2
+      set header2 split-on-comma file-read-line ]  
+
+  file-open file-name1
+  
+  while [ false = file-at-end? ]
+  [    
+    let values1 split-on-comma file-read-line  
+    create-households 1   
+    [      
+    ;  set hidden? true 
+      set color blue + 3
+      set size .5
+      set shape "circle"
+           
+      set isMaleList []
+      set ageList []
+      set isRelatedList []
+      set raceList []
+      set isHispanicList []
+      set personalIncomeList []
+      set employStatusList []
+      set povertyStatusList []
+      set englishKnowledgeList []
+      set educationStatusList []  
+      set studentStatusList []  
+      set isPotentialTargetList []
+      set isPotentialAbuserList []
+      set beenSelected false 
+      set isHurtPhysically?        false
+      set isHurtInjuriously?       false
+      set receivedInformalSupport? false
+      set foundChildCare?          false
+      set foundFinAid?             false
+      set foundHouseAid?           false
+      set foundHomelessAid?        false
+      set victimCalledPolice?      false
+      set lowIncomeMomFoundJob?    false
+      set talkedToFriend?          false
+      set currentlyInShelter?      false
+      set gotService?              false
+      set leftAbuser?              false
+      set isHomeless?              false
+      set visitedShelter?          false
+      set visitedServiceLocation?  false
+      set foundEducService?        false
+      set currentlySafe?           false
+
+      (foreach header1 values1
+        [ 
+          if ?1 = "x" [ 
+            let easting read-from-string ?2
+            set xcor_home Convert-Easting2Px easting ]        
+          if ?1 = "y" [ 
+            let northing read-from-string ?2
+            set ycor_home Convert-Northing2Py northing ] 
+          if ?1 = "NP" [set NP read-from-string ?2 ]                  
+          if ?1 = "HHT" [ set HHT_status read-from-string ?2 ]
+          if ?1 = "VEH" [ set VEH_status read-from-string ?2 ]
+          if ?1 = "HH_income" [ set HINCP_status read-from-string ?2 ]
+          if ?1 = "HUPAC" [ set HUPAC_status read-from-string ?2 ]
+          if ?1 = "MV" [ set MV_status read-from-string ?2 ]
+          if ?1 = "PARTNER" [set Partner_status read-from-string ?2]             
+        ]
+      )        
+     
+      file-open file-name2                
+      let loopCount 1                                  
+      while[loopCount <= NP] 
+      [        
+        let values2 split-on-comma file-read-line
+        (foreach header2 values2
+          [ set-values-person-file header2 values2 ?1 ?2 ] )                                         
+        set loopCount loopCount + 1   
+      ]      
+
+      file-open file-name1       
+    ]                
+
+    set summ count households   
+    while [counter < summ]
+    [
+      set counter counter + 10000   
+      type date-and-time type " " type "Created:   " type summ type " out of " type lines type " households; " type (lines - summ) print " more to go."
+      type date-and-time type " " type "Left to be created:   " print lines - summ 
+    ]                
+ ]           
+  
+  file-close-all    
+end
+
+to-report calculate-remaining-lines
+  
+   let counter 0
+   while [ false = file-at-end? ]
+   [ let a file-read-line
+     set counter counter + 1 ]
+  
+   report counter
+   
+end

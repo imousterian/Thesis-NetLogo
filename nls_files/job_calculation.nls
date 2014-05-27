@@ -1,0 +1,31 @@
+to low-income-mother-looking-for-work
+
+  let booleanHealthProblem false
+  let booleanLowEducation false
+
+  ifelse (educationStatusTarget <= 17) [set booleanLowEducation 1] [set booleanLowEducation 0]
+  ifelse (englishStatusTarget >= 3 and englishStatusTarget <= 4) [ set booleanEnglishDif 1 ][ set booleanEnglishDif 0 ] 
+ 
+  
+  if (lifeTimeExposure = true)
+  [
+    ifelse monthlyCountActsPerPerson >= 1
+    [
+      set booleanHealthProblem 1 ]
+    [
+      set booleanHealthProblem 0
+    ]
+  
+  ]
+    
+  array:set variable-array-low-income-mother-emplt 0 booleanLowEducation             
+  array:set variable-array-low-income-mother-emplt 1 booleanEnglishDif     
+  array:set variable-array-low-income-mother-emplt 3 booleanChild 
+  array:set variable-array-low-income-mother-emplt 4 booleanHealthProblem            
+ 
+  set resultOfCalculation calculate-regression variable-array-low-income-mother-emplt coefficient-array-low-income-mother-emplt constantLowIncomeEmplt
+  let probabilityLowIncomeMomFoundJob exp(resultOfCalculation) / (1 + exp(resultOfCalculation)) / time-step  
+  set lowIncomeMomFoundJob? boolean? probabilityLowIncomeMomFoundJob    
+
+end
+

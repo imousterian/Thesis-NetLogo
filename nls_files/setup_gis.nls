@@ -1,0 +1,44 @@
+extensions [ gis ]
+
+patches-own [  
+  city-boundary 
+  chicago-tracts ]
+
+globals [
+
+  chicago-dataset
+  cultural-centers-dataset   
+  city-boundary-dataset
+  chicago-tracts-dataset
+  eastingOrigin
+  northingOrigin
+  factor
+
+]
+    
+
+to setup-gis-data 
+  
+  ask patches [set pcolor white]  
+  
+  set chicago-dataset gis:load-dataset "gis_data/chicago_boundary.shp"   
+  set city-boundary-dataset gis:load-dataset "gis_data/chicago_boundary90.asc"                         
+  set chicago-tracts-dataset gis:load-dataset "gis_data/chicago_tracts90.asc"
+     
+  gis:set-drawing-color black  gis:draw chicago-dataset 1
+  
+  gis:set-world-envelope (gis:envelope-union-of                        
+                        (gis:envelope-of city-boundary-dataset)
+                        (gis:envelope-of chicago-tracts-dataset))    
+  
+  
+  let world gis:world-envelope
+  Convert-Setup world
+                   
+  gis:apply-raster city-boundary-dataset city-boundary
+  gis:apply-raster chicago-tracts-dataset chicago-tracts   
+
+end
+
+
+

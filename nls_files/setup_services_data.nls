@@ -1,0 +1,169 @@
+extensions [array]
+
+welfare-places-own [
+
+  services-variable-array  
+  ESL
+  GED
+  emergencyService
+  childService
+  houseAssist
+  maxEducationTime
+]
+
+shelters-own [
+
+  totalBeds
+  availableBeds
+  maxShelterTime
+  max_time  
+  #requests
+  shelterID
+  shelterType
+  
+]
+
+
+to read-setup-services-file [file-name]
+  
+  ifelse file-name = false
+    [ file-open user-file ]
+    [ file-open file-name 
+      file-close
+      file-open file-name ]      
+
+  let header split-on-comma file-read-line
+
+  while [ false = file-at-end? ]
+  [
+
+    let values split-on-comma file-read-line
+
+    create-welfare-places 1 
+    [ 
+      set shape "house"
+      set color red
+      set size 2
+      
+      (foreach header values
+       [
+         if ?1 = "x" [ set xcor Convert-Easting2Px read-from-string ?2 ]    
+         if ?1 = "y" [ set ycor Convert-Northing2Py read-from-string ?2 ] 
+         if ?1 = "ESL" [set ESL read-from-string ?2 ] 
+         if ?1 = "GED" [set GED read-from-string ?2 ] 
+         if ?1 = "emergencyService" [set emergencyService read-from-string ?2 ] 
+         if ?1 = "childService" [set childService read-from-string ?2 ] 
+         if ?1 = "houseAssistance" [set houseAssist read-from-string ?2 ] 
+       ]
+      )
+      
+    ] 
+  ]
+
+  setup-welfare-place-data
+  
+end
+
+to read-setup-shelters-file [file-name]
+ 
+  ifelse file-name = false
+    [ file-open user-file ]
+    [ file-open file-name 
+      file-close
+      file-open file-name ]      
+
+  let header split-on-comma file-read-line
+
+  while [ false = file-at-end? ]
+  [
+
+    let values split-on-comma file-read-line
+
+    create-shelters 1 
+    [ 
+      
+      set shape "house"
+      set color black
+      set size 3
+      
+      (foreach header values
+       [
+         if ?1 = "x" [ set xcor Convert-Easting2Px read-from-string ?2 ]    
+         if ?1 = "y" [ set ycor Convert-Northing2Py read-from-string ?2 ] 
+         if ?1 = "ID" [set shelterID read-from-string ?2 ] 
+         if ?1 = "typeCode" [set shelterType read-from-string ?2 ] 
+         if ?1 = "NumberBeds" [set totalBeds read-from-string ?2 ] 
+         if ?1 = "MaxTime" [set maxShelterTime read-from-string ?2 ] 
+       ]
+      )      
+    ] 
+  ] 
+  
+  setup-shelter-data
+
+end
+
+to setup-shelter-data
+  
+  ask shelters [if shelterID = 23 or shelterID = 27
+  [
+    set totalBeds 1
+    set availableBeds 1] ]
+  
+  ask shelters with [ shelterID != 23 and shelterID != 27] [die]
+            
+  ask shelters [set max_time maxShelterTime]
+  
+
+  if Shelter-status = "original capacity"
+    [
+      ask shelters                                     
+      [                                                   
+        set availableBeds totalBeds       
+      ]    
+    ]
+    
+  if Shelter-status = "decreased capacity"
+    [
+      ask shelters                                   
+      [                                                     
+        set availableBeds round ( totalBeds - totalBeds * percent-of-shelter-capacity / 100)       
+        set availableBeds round ( totalBeds - totalBeds * percent-of-shelter-capacity / 100)
+        if availableBeds < 0  [set availableBeds 0]
+        if totalBeds < 0 [ set totalBeds 0]
+      ]
+
+    ] 
+     
+  if Shelter-status = "increased capacity"
+    [
+      ask shelters 
+      [             
+        set availableBeds round ( totalBeds + totalBeds * percent-of-shelter-capacity / 100)       
+        set availableBeds round ( totalBeds + totalBeds * percent-of-shelter-capacity / 100)
+      ]
+
+    ]
+
+end
+
+
+to setup-welfare-place-data
+  
+  set numberOfServices count welfare-places          
+  
+  ask welfare-places 
+    [
+      let education false
+      set maxEducationTime 12
+      ifelse (ESL = 1 or GED = 1) [set education 1][set education 0]       
+      set services-variable-array array:from-list n-values 4 [0]
+      array:set services-variable-array 0 houseAssist                
+      array:set services-variable-array 1 education              
+      array:set services-variable-array 2 childService             
+      array:set services-variable-array 3 emergencyService              
+                                                             
+    ]
+end
+ 
+

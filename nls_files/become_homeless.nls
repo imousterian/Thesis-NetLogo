@@ -1,0 +1,35 @@
+to calculate-become-homeless
+ 
+    let chanceDecisionVisit 0
+  
+    if ( povertyStatusTarget <= 100 and personalIncomeTarget < 16640 ) [ set chanceDecisionVisit 0.6 ]  
+    if ( povertyStatusTarget <= 100 and personalIncomeTarget >= 16640 ) [ set chanceDecisionVisit 0.4 ]  
+    if ( povertyStatusTarget > 100) [ set chanceDecisionVisit 0.4 ]
+  
+    if rand? chanceDecisionVisit [ make-decision-visit-shelter ]
+    
+    if currentlyInShelter? = false
+      [
+                
+        if povertyStatusTarget <= 100 and personalIncomeTarget < 16640                                
+          [                                                                               
+            set isHomeless? true
+            set randHomelessTime random time-step
+            set currentlySafe? false 
+            set in-need-for-home true 
+          ]
+       
+        if povertyStatusTarget <= 100 and personalIncomeTarget >= 16640                                  
+          [                                                                          
+            set isHomeless? false 
+            set currentlySafe? true 
+          ]
+
+        if povertyStatusTarget > 100                                         
+          [ set isHomeless? false 
+            set currentlySafe? true 
+          ]
+      ]
+end
+
+

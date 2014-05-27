@@ -1,0 +1,164 @@
+to run-all-main-methods
+  
+  ask-concurrent households with [ beenSelected = true ] [ calculate-violence ]
+ 
+  ask-concurrent households with [ beenSelected = true ] [ violence-update-counts ]
+ 
+  ask-concurrent households with [ isHurtPhysically? = true or isHurtInjuriously? = true ][ calculate-calling-police ]
+  
+  ask-concurrent households  with [ lifeTimeExposure = true and currentlySafe? = false ] [ determine-talking-to-friend-if-friend-helps ]
+ 
+  ask-concurrent households with [ currentlySafe? = false and lifeTimeExposure = true ] [ calculate-leave-abuser ]
+  
+  ask-concurrent households with [ leftAbuser? = true ][ calculate-become-homeless ]
+ 
+  ask-concurrent households with [ beenSelected = true ] [ update-information-on-shelters-homeless-other ]
+
+  ask-concurrent households with [ currentlyInShelter? = true] [ determine-how-long-to-stay-in-shelter ]
+
+  ask-concurrent households with [ beenSelected = true ] [ look-for-job-or-social-center ]
+
+  ask-concurrent households with [isHomeless? = true] [ reset-or-update-shelter-welfare-information ]
+  
+  ask-concurrent households with [beenSelected = true] [ update-counts-police-calls ]
+   
+end
+
+to reset-or-update-shelter-welfare-information
+        
+  visit-social-center
+
+  ifelse foundHouseAid? = true
+    [
+      set currentlySafe? true 
+      set isHomeless? false
+      set homelessClock 0    
+    ][   
+        
+  make-decision-visit-shelter
+  
+    ]
+
+end
+
+to update-information-on-shelters-homeless-other
+  
+  if currentlyInShelter? = true 
+  [          
+    set shelterClock shelterClock + 1 
+    set in-need-for-home false
+  ]  
+   
+ if isHomeless? = true    
+   [
+     set homelessClock homelessClock + 1      
+       
+     if homelessClock >= randHomelessTime      
+     [
+       set homelessClock 0
+       set isHomeless? false
+       set currentlySafe? false
+       set xcor xcor_home
+       set ycor ycor_home
+     ]     
+   ]                                 
+            
+ if foundEducService? = true 
+   [
+     set availableForJobSearch false
+     set educationClock educationClock + 1      
+     if educationClock >= time-step                   
+       [
+         set foundEducService? false
+         set educationClock 0
+         set availableForJobSearch true
+         set studentStatusTarget 0
+          
+       ]
+   ]
+     
+ if foundChildCare? = true                   
+   [ 
+     set childCareClock childCareClock + 1 
+    
+      if childCareClock >= time-step                
+      [
+        set foundChildCare? false
+        set booleanChild 1
+        set childCareClock 0
+      ]    
+  ]
+
+end
+
+
+to look-for-job-or-social-center
+   
+  if (availableForJobSearch = true and povertyStatusTarget <= 100 and personalIncomeTarget < 16640 and lifetimeExposure = true)  
+  [    
+      low-income-mother-looking-for-work    
+      
+      ifelse lowIncomeMomFoundJob? = true
+      [ 
+        set employmentStatusTarget 1
+        set personalIncomeTarget 16640        
+        set householdIncome householdIncome + personalIncomeTarget
+        let updated-household-income HINCP_status + personalIncomeTarget
+        set HINCP_status updated-household-income
+        set availableForJobSearch false
+        
+      ][
+      visit-social-center                             
+      ]
+  ]
+end
+ 
+
+
+to reset-variables
+    
+ ask households with [ beenSelected = true ]                       
+  [
+    set victimCalledPolice? false                                              
+    set isHurtPhysically? false                                                 
+    set isHurtInjuriously? false
+    set visitedShelter? false
+    set visitedServiceLocation? false
+    set gotService? false
+    set leftAbuser? false
+
+    set talkedToFriend? false
+    if timeCount > time-step [ set receivedInformalSupport? false ]
+    set lowIncomeMomFoundJob? false
+    
+    set foundHouseAid? false
+    set foundEducService? false
+    set foundChildCare? false
+    set foundFinAid? false
+    set foundOtherAid? false
+  ]
+  
+ ask shelters 
+ [ set #requests 0 ]
+ 
+end
+
+
+to reset-time
+  
+  set time-step 12
+    
+  if time-step = 52 [ask shelters [ set maxShelterTime round (max_time / 4) ] ]
+  if time-step = 12 [ask shelters [ set maxShelterTime round (max_time / 30) ] ]
+
+  set timeCount timeCount + 1
+  if timeCount > time-step
+  [
+    set timeCount 1
+    set year-count year-count + 1 
+  ] 
+  
+  set month-count timeCount
+
+  
+end

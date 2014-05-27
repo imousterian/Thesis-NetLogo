@@ -1,0 +1,153 @@
+to-report calculate-probability-helping-victims [ helper-sex helper-age helper-hisp ]
+ 
+  let booleanFemale false
+  let helperAgeFemale false
+  let helperAgeMale false
+  let beliefHelpingVictimsIPV false
+  let perceivedPrevalenceRatesIPV false
+  let personalExposureIPV false
+  
+  ifelse (helper-sex = 2) [ set booleanFemale 1 ] [set booleanFemale 0]
+  ifelse (helper-sex = 2) [ set helperAgeFemale helper-age ] [ set helperAgeFemale 0 ]  
+  ifelse (helper-sex = 1) [ set helperAgeMale helper-age ] [ set helperAgeMale 0 ]  
+  
+  let _tempbelief 0
+  let _tempprev 0
+  let _anothertempbelief 0
+  let _anothertemprate 0 
+  
+  
+  if (helper-hisp = 0) [set _tempbelief random-normal 4.26 0.69]
+  
+  if (helper-hisp = 1) [set _tempbelief 2.3 / 4 * 5] 
+  
+  if (helper-hisp = 0) [set _tempprev random-normal 2.93 1.07 ] 
+  
+  if (helper-hisp = 1 and helper-sex = 2) [ set _tempprev 3.2 / 4 * 5 ]  
+    
+  if (helper-hisp = 1 and helper-sex = 1) [ set _tempprev 2.3 / 4 * 5 ]  
+        
+  
+  ifelse change-public-awareness? = false
+  [ 
+    set beliefHelpingVictimsIPV _tempbelief
+    set perceivedPrevalenceRatesIPV _tempprev
+  ][    
+      set _anothertempbelief (5 - _tempbelief)
+      set beliefHelpingVictimsIPV (_tempbelief + _anothertempbelief * change-public-awareness / 100) 
+      
+      set _anothertemprate (5 - _tempprev)
+      set perceivedPrevalenceRatesIPV (_tempprev + _anothertemprate * change-public-awareness / 100) 
+               
+  ]
+ 
+
+    
+  set personalExposureIPV monthlyCountActsPerPerson  
+
+  array:set helping-victims-variable-array 0 booleanFemale                   
+  array:set helping-victims-variable-array 1 helperAgeFemale                 
+  array:set helping-victims-variable-array 2 helperAgeMale                   
+  array:set helping-victims-variable-array 3 beliefHelpingVictimsIPV                                                                                                                                            
+  array:set helping-victims-variable-array 5 personalExposureIPV            
+  array:set helping-victims-variable-array 6 perceivedPrevalenceRatesIPV   
+
+  set resultOfCalculation calculate-regression helping-victims-variable-array coefficient-helping-victims-array constantHelpVictims
+  let probabilityPersonHelped exp(resultOfCalculation) / (1 + exp(resultOfCalculation))  
+  let helpedVictim? boolean? probabilityPersonHelped
+  
+  report helpedVictim?
+  
+end
+
+to determine-talking-to-friend-if-friend-helps
+
+ ifelse empty? numberOfHouseholdFriendsList                             
+     [ set levelOfSupport 0 ]                           
+     [                                                                                
+       calculate-talking-to-friends                                             
+       
+       ifelse talkedToFriend? = false                    
+       [ set levelOfSupport 0 ]
+       [
+         let good-friend one-of numberOfHouseholdFriendsList                   
+         let index get-target-household-index numberOfHouseholdFriendsList good-friend 
+         let friend-index item index indexFriendByHouseholdList                
+         let ifFriendHisp false
+         let ifFriendBlack false
+         let helped? false
+         
+         ask good-friend 
+         [ 
+           let friend-sex item friend-index isMaleList
+           let friend-age item friend-index ageList
+           let friend-hisp item friend-index isHispanicList
+           let friend-race item friend-index raceList
+           if (friend-hisp >= 2 and friend-race >= 1) [set ifFriendHisp 1 set ifFriendBlack 0]
+           if (friend-hisp = 1 and friend-race = 1) [set ifFriendHisp 0 set ifFriendBlack 0]
+           if (friend-hisp = 1 and friend-race = 2) [set ifFriendHisp 0 set ifFriendBlack 1]
+
+           set helped? calculate-probability-helping-victims friend-sex friend-age friend-hisp 
+           
+         ]                                                                        
+       
+         ifelse [helped?] of good-friend = true                           
+         [           
+           set receivedInformalSupport? true
+           determine-level-of-support ifFriendHisp ifFriendBlack
+         ][                                                                      
+           set receivedInformalSupport? false
+           set levelOfSupport 0 
+         ]
+       ]
+    ]   
+end
+
+ 
+to calculate-talking-to-friends 
+
+     if booleanBlack = 1
+     [
+       ifelse rand? 0.44   
+     [ set talkedToFriend? true ]
+     [ set talkedToFriend? false ] ]
+     
+     if booleanHispanic = 1
+     [
+       ifelse rand? (vary 0.74 0.78) 
+     [ set talkedToFriend? true ]
+     [ set talkedToFriend? false ]]     
+     
+     if booleanBlack = 0 and booleanHispanic = 0
+     [
+       ifelse rand? 0.92       
+       [ set talkedToFriend? true ]
+       [ set talkedToFriend? false ]]
+ 
+end
+
+
+to determine-level-of-support [helper-black helper-hispanic]
+
+  let _support 0
+  
+  if (helper-black = 1) [ set _support (random-normal 3.5 0.83) / 7 ]  
+
+  if (helper-hispanic = 1) [ set _support (random-normal 3.2 0.8) / 7 ] 
+         
+  if (helper-hispanic = 0 and helper-black = 0) [set _support 8.55 / 12 ]
+                                                                    
+  ifelse change-public-awareness? = true
+    [                      
+      let _tempsupport _support * 12       
+      let _zsupport 12 - _tempsupport      
+           
+      set levelOfSupport (_tempsupport + _zsupport * change-public-awareness / 100) 
+    ]
+    [
+      set levelOfSupport _support * 12 ]
+    
+       
+end
+
+

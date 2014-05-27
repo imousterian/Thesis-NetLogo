@@ -1,0 +1,133 @@
+
+to visit-social-center
+  
+    let max_distance 0
+    let _thedistance 0
+    let q 0
+    let attractivenessEachPlace 0
+    let attractivenessSumPlaces 0
+    let attractiveness-calculation 0
+    let new-distance1 0
+    
+    if any? welfare-places
+    [     
+        ifelse empty? welfare-place-list-regular                                     
+        [
+          set welfare-place-list1a []
+          set search-distance  Convert-WorldDistance2Model 50000                                                               
+          set welfare-place-list-regular sort-by [[distance myself] of ?1 < [distance myself] of ?2] welfare-places in-radius search-distance
+          
+          if empty? welfare-place-list-regular                                      
+          [                                                                           
+              set  max_distance min [distance myself] of welfare-places
+              set search-distance max_distance                                                                           
+              set welfare-place-list-regular sort-by [[distance myself] of ?1 < [distance myself] of ?2] welfare-places in-radius search-distance                   
+          ] 
+        ][        
+          set welfare-place-list1a array:from-list welfare-place-list-regular 
+          foreach n-values (array:length welfare-place-list1a) [?] 
+          [
+            set _thedistance [distance myself] of array:item welfare-place-list1a ?
+            set new-distance1 _thedistance
+            ask array:item welfare-place-list1a ? 
+            [
+              let _attx calculate-attract-access
+              let _p [new-distance1] of myself 
+              if _p <= 0 [set _p 0.00001]             
+              set attractiveness-calculation _attx * (_p ^ -1 )
+            ]
+        
+            set attractivenessEachPlace [attractiveness-calculation] of array:item welfare-place-list1a ?
+            set attractivenessSumPlaces attractivenessSumPlaces + attractivenessEachPlace                  
+          ]          
+
+          let temp-list array:to-list welfare-place-list1a  
+          set welfare-place-selected one-of temp-list        
+          let probHuff [attractivenessEachPlace] of welfare-place-selected / attractivenessSumPlaces
+          let _visitedServiceLocation? boolean? probHuff     
+         
+          ifelse _visitedServiceLocation? = false
+          [
+            set foundChildCare? false
+            set foundEducService? false 
+            set foundFinAid? false
+            set foundHouseAid? false
+            set foundOtherAid? false                        
+          ][ 
+          
+            move-to welfare-place-selected
+            check-for-services-in-centers                                                         
+            set welfare-place-list-regular remove welfare-place-selected welfare-place-list-regular
+            set welfare-place-list1a array:from-list welfare-place-list-regular 
+           
+          ] 
+        ]
+    ]
+end 
+
+
+to check-for-services-in-centers 
+   
+  if booleanEnglishDif = 1
+  [ 
+    ifelse [ESL] of welfare-place-selected = 1
+    [ 
+      set foundEducService? true 
+      set englishStatusTarget 1
+      set in-need-for-education false
+      set studentStatusTarget 16
+    ][ 
+      set foundEducService? false
+    ]
+  ]
+  
+  if (educationStatusTarget <= 17)
+  [
+    ifelse [GED] of welfare-place-selected = 1
+    [
+      set foundEducService? true 
+      set in-need-for-education false
+      set studentStatusTarget 16
+      set educationStatusTarget 18  
+    ]     
+    [
+      set foundEducService? false 
+    ]
+  ]
+  
+  if (booleanChild = 1)
+  [
+    ifelse [childService] of welfare-place-selected = 1
+    [
+      set foundChildCare? true
+      set booleanChild 0
+      set in-need-for-childcare false ]
+    [
+      set foundChildCare? false 
+    ]
+  ]
+    
+  if (in-need-for-money = true)
+  [
+    ifelse [emergencyService] of welfare-place-selected = 1
+    [
+      set foundFinAid? true 
+      set in-need-for-money false ]
+    [
+      set foundFinAid? false
+    ]
+  ]
+
+  if in-need-for-home = true
+  [
+    ifelse [houseAssist] of welfare-place-selected = 1
+    [  
+      set foundHouseAid? true 
+      set in-need-for-home false
+    ][
+      set foundHouseAid? false 
+    ]
+  ]
+ 
+   
+end

@@ -1,0 +1,34 @@
+to-report calculate-regression [variableArray coefficientArray constant]
+  let result constant
+  foreach n-values (array:length variableArray) [?] [
+    set result result + ( (array:item variableArray ?) * (array:item coefficientArray ? ) )
+    ]
+  report result  
+end
+
+to-report vary [#low #high]
+   report #low + random(#high - #low + 1)
+end
+
+to-report rand? [%prob]
+  report %prob > random-float 1
+end
+
+to-report boolean? [#result]
+  ifelse #result > random-float 1
+    [report true]
+    [report false]
+ end
+
+to-report calculate-attract-access 
+         
+  let result 0       
+  foreach n-values (array:length services-variable-array) [?]
+    [
+      let temp ((array:item services-variable-array ?) * (array:item services-weight-array ?))
+      set result result + temp ]
+       
+  report result
+
+end
+

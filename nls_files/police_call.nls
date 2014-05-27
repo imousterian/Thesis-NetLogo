@@ -1,0 +1,70 @@
+to calculate-calling-police
+
+  set victimCalledPolice? calculate-probability-calling-police                  
+
+end
+
+to-report calculate-probability-calling-police 
+  
+  let booleanGun false
+  let booleanOtherWeapon false
+  let booleanPhysicalInjury false 
+  let booleanOnetoFourPriorVictimization false
+  let booleanFivePlusPriorVictimization false
+  let booleanHighIncome false
+  let booleanLowIncome false
+  
+  
+  ifelse (rand? 0.048) [set booleanGun 1][set booleanGun 0]
+  ifelse (rand? 0.12) [set booleanOtherWeapon 1] [set booleanOtherWeapon 0]
+  
+  ifelse (isHurtPhysically? = true or isHurtInjuriously? = true) [set booleanPhysicalInjury 1][set booleanPhysicalInjury 0]
+  
+  ifelse (monthlyCountActsPerPerson <= 4) [ set booleanOnetoFourPriorVictimization 1][set booleanOnetoFourPriorVictimization 0]
+  ifelse (monthlyCountActsPerPerson >= 5) [ set booleanFivePlusPriorVictimization 1][set booleanFivePlusPriorVictimization 0]
+  
+  ifelse (personalincomeTarget) >= 40000 [ set booleanHighIncome 1 ][set booleanHighIncome 0]
+  ifelse (personalincomeTarget) <= 25000 [ set booleanLowIncome 1 ] [set booleanLowIncome 0]
+   
+
+  array:set calling-police-variable-array 8 booleanPhysicalInjury                          
+  array:set calling-police-variable-array 20 booleanOnetoFourPriorVictimization          
+  array:set calling-police-variable-array 21 booleanFivePlusPriorVictimization           
+  array:set calling-police-variable-array 35 booleanHighIncome                         
+  array:set calling-police-variable-array 36 booleanLowIncome                           
+
+
+  let regressionVictimCalling calculate-regression calling-police-variable-array coefficient-victim-calling-police-array constantVictimCallingPolice
+  let regressionThirdPartyCalling calculate-regression calling-police-variable-array coefficient-third-party-calling-police-array constantThirdPartyCallingPolice   
+  let denominator2-be (1 + exp(regressionVictimCalling) + exp(regressionThirdPartyCalling))     
+                               
+  let probabilityVictimCalledPolice exp(regressionVictimCalling) / denominator2-be  
+  let _victimCalledPolice? boolean? probabilityVictimCalledPolice
+  report _victimCalledPolice?
+  
+
+end
+
+to update-counts-police-calls
+  
+  ifelse timeCount < time-step 
+  [
+    if victimCalledPolice? = true
+    [
+      
+      array:set totalPoliceCallRate 0 array:item totalPoliceCallRate 0 + 1
+        
+      if (booleanWhite = 1) [ array:set totalPoliceCallRate 1 array:item totalPoliceCallRate 1 + 1]
+        
+      if (booleanBlack = 1) [  array:set totalPoliceCallRate 2 array:item totalPoliceCallRate 2 + 1]
+        
+      if (booleanHispanic = 1) [  array:set totalPoliceCallRate 3 array:item totalPoliceCallRate 3 + 1 ] 
+    
+
+      set  monthlyPoliceCalls  monthlyPoliceCalls + 1 ]
+  ]
+
+  [ set monthlyPoliceCalls 0 
+    set totalPoliceCallRate array:from-list n-values 4 [0] ]  
+
+ end

@@ -1,0 +1,309 @@
+extensions [array]
+
+globals [
+  
+  totalViolenceIncidenceRate
+  targetPopCountsByRace
+  totalPoliceCallRate
+  variables
+  services-weight-array
+  numberOfServices
+  time-step
+  timeCount
+  abcd
+  
+  constantPhysicalViolence   
+  constantVerbalViolence 
+  constantInjuryViolence
+  constantSeekingHelp
+  constantHelpVictims
+  constantVictimCallingPolice
+  constantThirdPartyCallingPolice
+  constantLowIncomeEmplt
+
+
+  coefficient-verbal-violence-array
+  coefficient-physical-violence-array
+  coefficient-injury-violence-array
+  coefficient-leaving-abuser-array 
+  coefficient-helping-victims-array
+  coefficient-victim-calling-police-array
+  coefficient-third-party-calling-police-array
+  coefficient-array-low-income-mother-emplt
+
+  month-count
+  year-count
+  week-count
+  resultOfCalculation
+
+  ]
+
+
+
+
+to setup-coefficients
+
+    set constantPhysicalViolence -0.42
+    set constantVerbalViolence 0.6
+    set constantInjuryViolence 0.7
+    set constantSeekingHelp -2.2              
+    set constantHelpVictims -0.41
+    set constantVictimCallingPolice -2.245
+    set constantThirdPartyCallingPolice -1.810
+    set constantLowIncomeEmplt  -0.372 
+    
+    
+    set services-weight-array array:from-list n-values 4 [0]     
+    array:set services-weight-array 0 1.92
+    array:set services-weight-array 1 2.32
+    array:set services-weight-array 2 1.53
+    array:set services-weight-array 3 1.77
+
+      
+    set coefficient-verbal-violence-array array:from-list n-values 17 [0]          
+    array:set coefficient-verbal-violence-array 0 0.073
+    array:set coefficient-verbal-violence-array 1 -0.36
+    array:set coefficient-verbal-violence-array 2 -0.008
+    array:set coefficient-verbal-violence-array 3 -0.001
+    array:set coefficient-verbal-violence-array 4 0.1
+    array:set coefficient-verbal-violence-array 5 -0.09
+    array:set coefficient-verbal-violence-array 6 0.286
+    array:set coefficient-verbal-violence-array 7 -0.539
+    array:set coefficient-verbal-violence-array 8 -0.01
+    array:set coefficient-verbal-violence-array 9 0.012
+    array:set coefficient-verbal-violence-array 10 -0.012 
+    array:set coefficient-verbal-violence-array 11 0.035
+    array:set coefficient-verbal-violence-array 12 -0.254
+    array:set coefficient-verbal-violence-array 13 0.689
+    array:set coefficient-verbal-violence-array 14 0.221
+    array:set coefficient-verbal-violence-array 15 -0.13
+    array:set coefficient-verbal-violence-array 16 -0.182
+    
+    ;;;
+    set coefficient-physical-violence-array array:from-list n-values 17 [0]          
+    array:set coefficient-physical-violence-array 0 0.662
+    array:set coefficient-physical-violence-array 1 0.035
+    array:set coefficient-physical-violence-array 2 -0.037
+    array:set coefficient-physical-violence-array 3 -0.001
+    array:set coefficient-physical-violence-array 4 -0.007
+    array:set coefficient-physical-violence-array 5 -0.012
+    array:set coefficient-physical-violence-array 6 0.43
+    array:set coefficient-physical-violence-array 7 0.403
+    array:set coefficient-physical-violence-array 8 -0.067
+    array:set coefficient-physical-violence-array 9 -0.009
+    array:set coefficient-physical-violence-array 10 -0.001
+    array:set coefficient-physical-violence-array 11 0.033
+    array:set coefficient-physical-violence-array 12 0.063
+    array:set coefficient-physical-violence-array 13 1.147
+    array:set coefficient-physical-violence-array 14 0.931
+    array:set coefficient-physical-violence-array 15 -0.145
+    array:set coefficient-physical-violence-array 16 -0.306
+    ;;
+    
+    set coefficient-injury-violence-array array:from-list n-values 17 [0]          
+    array:set coefficient-injury-violence-array 0 0.166
+    array:set coefficient-injury-violence-array 1 -0.079
+    array:set coefficient-injury-violence-array 2 -0.165
+    array:set coefficient-injury-violence-array 3 0.009
+    array:set coefficient-injury-violence-array 4 0.473
+    array:set coefficient-injury-violence-array 5 -0.047
+    array:set coefficient-injury-violence-array 6 0.422
+    array:set coefficient-injury-violence-array 7 0.491
+    array:set coefficient-injury-violence-array 8 -0.051
+    array:set coefficient-injury-violence-array 9 0.039
+    array:set coefficient-injury-violence-array 10 -0.108
+    array:set coefficient-injury-violence-array 11 0.004
+    array:set coefficient-injury-violence-array 12 -0.339
+    array:set coefficient-injury-violence-array 13 1.91
+    array:set coefficient-injury-violence-array 14 1.47
+    array:set coefficient-injury-violence-array 15 -0.296
+    array:set coefficient-injury-violence-array 16 -0.403
+        
+    
+    set coefficient-leaving-abuser-array array:from-list n-values 13 [0]
+    array:set coefficient-leaving-abuser-array 0 -0.31              
+    array:set coefficient-leaving-abuser-array 1 0.03               
+    array:set coefficient-leaving-abuser-array 2 0.14              
+    array:set coefficient-leaving-abuser-array 3 0.23               
+    array:set coefficient-leaving-abuser-array 4 0.2                
+    array:set coefficient-leaving-abuser-array 5 -0.01             
+    array:set coefficient-leaving-abuser-array 6 0.1                
+    array:set coefficient-leaving-abuser-array 7 -0.02              
+    array:set coefficient-leaving-abuser-array 8 -0.19             
+    array:set coefficient-leaving-abuser-array 9 1.75               
+    array:set coefficient-leaving-abuser-array 10 -0.25             
+    array:set coefficient-leaving-abuser-array 11 0.02              
+    array:set coefficient-leaving-abuser-array 12 -0.01            
+    
+    
+      
+    set coefficient-helping-victims-array array:from-list n-values 7 [0]
+    array:set coefficient-helping-victims-array 0 0.17
+    array:set coefficient-helping-victims-array 1 -0.01
+    array:set coefficient-helping-victims-array 2 -0.01
+    array:set coefficient-helping-victims-array 3 0.12 
+    array:set coefficient-helping-victims-array 4 0.3
+    array:set coefficient-helping-victims-array 5 0.35
+    array:set coefficient-helping-victims-array 6 0.12
+    
+        
+    set coefficient-victim-calling-police-array array:from-list n-values 41 [0]
+    array:set coefficient-victim-calling-police-array 0   -.329
+    array:set coefficient-victim-calling-police-array 1   -0.964  
+    array:set coefficient-victim-calling-police-array 2   -1.595
+    array:set coefficient-victim-calling-police-array 3   -1.079
+    array:set coefficient-victim-calling-police-array 4   .361
+    array:set coefficient-victim-calling-police-array 5   1.196
+    array:set coefficient-victim-calling-police-array 6   .629
+    array:set coefficient-victim-calling-police-array 7   .225
+    array:set coefficient-victim-calling-police-array 8   .999
+    array:set coefficient-victim-calling-police-array 9   -.289     
+    array:set coefficient-victim-calling-police-array 10  .456
+    array:set coefficient-victim-calling-police-array 11  .918
+    array:set coefficient-victim-calling-police-array 12  .819
+    array:set coefficient-victim-calling-police-array 13  -1.146
+    array:set coefficient-victim-calling-police-array 14  -.994
+    array:set coefficient-victim-calling-police-array 15  -.192
+    array:set coefficient-victim-calling-police-array 16  -.495
+    array:set coefficient-victim-calling-police-array 17  -.692
+    array:set coefficient-victim-calling-police-array 18  .293
+    array:set coefficient-victim-calling-police-array 19  -.04
+    array:set coefficient-victim-calling-police-array 20  -.065
+    array:set coefficient-victim-calling-police-array 21  .222
+    array:set coefficient-victim-calling-police-array 22  .116
+    array:set coefficient-victim-calling-police-array 23  -.105
+    array:set coefficient-victim-calling-police-array 24  .231
+    array:set coefficient-victim-calling-police-array 25  .629
+    array:set coefficient-victim-calling-police-array 26  1.153
+    array:set coefficient-victim-calling-police-array 27  .356
+    array:set coefficient-victim-calling-police-array 28  -.640
+    array:set coefficient-victim-calling-police-array 29  -0.941
+    array:set coefficient-victim-calling-police-array 30  .248
+    array:set coefficient-victim-calling-police-array 31  .013
+    array:set coefficient-victim-calling-police-array 32  .273
+    array:set coefficient-victim-calling-police-array 33  -.084  
+    array:set coefficient-victim-calling-police-array 34  .154
+    array:set coefficient-victim-calling-police-array 35  -.038
+    array:set coefficient-victim-calling-police-array 36  -.165
+    array:set coefficient-victim-calling-police-array 37  .213
+    array:set coefficient-victim-calling-police-array 38  -.789
+    array:set coefficient-victim-calling-police-array 39  -.824
+    array:set coefficient-victim-calling-police-array 40  -.601
+  
+    ;;;;;
+    
+    set coefficient-third-party-calling-police-array array:from-list n-values 41 [0]
+    array:set coefficient-third-party-calling-police-array 0   .04  
+    array:set coefficient-third-party-calling-police-array 1   -1.481
+    array:set coefficient-third-party-calling-police-array 2   -1.202
+    array:set coefficient-third-party-calling-police-array 3   -.955
+    array:set coefficient-third-party-calling-police-array 4   -.05
+    array:set coefficient-third-party-calling-police-array 5   1.313
+    array:set coefficient-third-party-calling-police-array 6   .855
+    array:set coefficient-third-party-calling-police-array 7   -.180
+    array:set coefficient-third-party-calling-police-array 8   1.020
+    array:set coefficient-third-party-calling-police-array 9   .373
+    array:set coefficient-third-party-calling-police-array 10  .669 
+    array:set coefficient-third-party-calling-police-array 11  .908
+    array:set coefficient-third-party-calling-police-array 12  .822   
+    array:set coefficient-third-party-calling-police-array 13  -.387
+    array:set coefficient-third-party-calling-police-array 14  -.838
+    array:set coefficient-third-party-calling-police-array 15  -.168
+    array:set coefficient-third-party-calling-police-array 16  -.203  
+    array:set coefficient-third-party-calling-police-array 17  -.717
+    array:set coefficient-third-party-calling-police-array 18  .189
+    array:set coefficient-third-party-calling-police-array 19  -.890
+    array:set coefficient-third-party-calling-police-array 20  -.215
+    array:set coefficient-third-party-calling-police-array 21  -.221
+    array:set coefficient-third-party-calling-police-array 22  -.116
+    array:set coefficient-third-party-calling-police-array 23  -.257
+    array:set coefficient-third-party-calling-police-array 24  .115  
+    array:set coefficient-third-party-calling-police-array 25  .285
+    array:set coefficient-third-party-calling-police-array 26  -.891
+    array:set coefficient-third-party-calling-police-array 27  .144
+    array:set coefficient-third-party-calling-police-array 28  .311
+    array:set coefficient-third-party-calling-police-array 29  .173
+    array:set coefficient-third-party-calling-police-array 30  -.806
+    array:set coefficient-third-party-calling-police-array 31  -.117
+    array:set coefficient-third-party-calling-police-array 32  .070
+    array:set coefficient-third-party-calling-police-array 33  .032
+    array:set coefficient-third-party-calling-police-array 34  .151
+    array:set coefficient-third-party-calling-police-array 35  -.137
+    array:set coefficient-third-party-calling-police-array 36  -.135
+    array:set coefficient-third-party-calling-police-array 37  -.012
+    array:set coefficient-third-party-calling-police-array 38  .169
+    array:set coefficient-third-party-calling-police-array 39  .354
+    array:set coefficient-third-party-calling-police-array 40  -.569
+  
+        
+    
+   ;from Blumenberg 
+    set coefficient-array-low-income-mother-emplt array:from-list n-values 5 [0]
+    array:set coefficient-array-low-income-mother-emplt 0  -0.718
+    array:set coefficient-array-low-income-mother-emplt 1  -0.386
+    array:set coefficient-array-low-income-mother-emplt 2  -0.810
+    array:set coefficient-array-low-income-mother-emplt 3  -0.266
+    array:set coefficient-array-low-income-mother-emplt 4  -0.806
+
+    
+  
+end 
+
+to-report substance-abuse-women [ _Frace _Fethnicity _Fage ]
+     
+  let result 0
+      
+  if (_Frace = 1 and _Fethnicity = 1) [ ; for White Non-Hispanics
+      
+
+    if (_Fage >= 18 and _Fage <= 29 and rand? 0.0292 ) [set result 1 ]
+    if (_Fage  >= 30 and _Fage  <= 44 and rand? 0.0556 )  [set result 1 ]
+    if (_Fage >= 45 and _Fage  <= 64 and rand? 0.0202 ) [set result 1 ]
+    if (_Fage  >= 65 and rand? 0.0036 ) [ set result 1 ]]
+    
+    
+  if (_Frace = 2 and _Fethnicity = 1) [ ; for Black Non-Hispanic
+      
+    if (_Fage  >= 18 and _Fage  <= 29 and rand? 0.021 )  [set result 1 ]
+    if (_Fage  >= 30 and _Fage  <= 44 and rand? 0.0151 )  [set result 1 ]
+    if (_Fage  >= 45 and _Fage  <= 64 and rand? 0.0125 )   [set result 1 ]
+    if (_Fage  >= 65 and rand? 0.0012)  [set result 1 ]]
+   
+  
+  if (_Fethnicity >= 2) [ ; for All Hispanics
+    if (_Fage  >= 18 and  _Fage  <= 29 and rand? 0.0304 )   [set result 1 ]
+    if (_Fage  >= 30 and _Fage  <= 44 and rand? 0.0146 )  [set result 1 ]
+    if (_Fage  >= 45 and  _Fage  <= 64 and rand? 0.0063 )   [set result 1 ]
+    if (_Fage  >= 65 and rand? 0.0 )   [set result 1 ] ]
+
+   
+  report result
+
+end
+
+to-report substance-abuse-men [ _Mrace _Methnicity _Mage ]
+  
+   let result 0
+   
+   if (_Mrace = 1 and _Methnicity = 1) [
+      if (_Mage  >= 18 and  _Mage  <= 29 and rand? 0.1019 ) [set result 1 ]
+      if (_Mage  >= 30 and  _Mage  <= 44 and rand? 0.101 )  [set result 1 ]
+      if (_Mage  >= 45 and _Mage  <= 64 and rand? 0.0597 )  [set result 1 ]
+      if (_Mage  >= 65 and rand? 0.0238 ) [set result 1 ]]
+      
+    if (_Mrace = 2 and _Methnicity = 1) [
+      if (_Mage   >= 18 and  _Mage   <= 29 and rand? 0.0692 )  [set result 1 ]
+      if (_Mage   >= 30 and  _Mage  <= 44 and rand? 0.0704 ) [set result 1 ]
+      if (_Mage  >= 45 and _Mage   <= 64 and rand? 0.0448 ) [set result 1 ]
+      if (_Mage  >= 65 and rand? 0.0179 )  [set result 1 ]]        
+         
+   if (_Methnicity >= 2) [
+      if (_Mage  >= 18 and  _Mage  <= 29 and rand? 0.09 )  [set result 1 ]
+      if (_Mage  >= 30 and  _Mage  <= 44 and rand? 0.0488 ) [set result 1 ]
+      if (_Mage  >= 45 and _Mage  <= 64 and rand? 0.0435 ) [set result 1 ]
+      if (_Mage  >= 65 and rand? 0.0369 ) [set result 1 ]]
+   
+   report result
+
+end
+

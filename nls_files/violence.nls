@@ -1,0 +1,98 @@
+extensions [array]
+
+
+to calculate-violence
+  
+  if currentlySafe? = false
+    [ determine-probability-of-violence ]
+    
+  if isHurtPhysically? = true or isHurtInjuriously? = true 
+    [ set lifeTimeExposure true ]
+
+end
+
+to determine-probability-of-violence
+ 
+  let HHincomeTenths HINCP_status / 1000
+  let F%income false 
+  let booleanCrisisSupport false
+  
+  ifelse HINCP_status > 0 [ set F%income personalIncomeTarget / HINCP_status * 10 ] [set F%income personalIncomeTarget / 10]                                                           
+   
+  ifelse receivedInformalSupport? =  true [set booleanCrisisSupport 1] [ set booleanCrisisSupport 0 ]
+                                                                                                                                                                                                                                                                    
+  array:set violence-variable-array 2  HHincomeTenths             
+  array:set violence-variable-array 3  F%income                                                                                                                                                        
+  array:set violence-variable-array 12 booleanCrisisSupport          
+    
+  let regressionVerbalViolence calculate-regression violence-variable-array coefficient-verbal-violence-array constantVerbalViolence
+  let regressionPhysicalViolence calculate-regression violence-variable-array coefficient-physical-violence-array constantPhysicalViolence
+  let regressionInjuryViolence calculate-regression violence-variable-array coefficient-injury-violence-array constantInjuryViolence
+      
+  let denominator-be (1 + exp(regressionVerbalViolence) + exp(regressionPhysicalViolence) + exp(regressionInjuryViolence))
+     
+  let _probabilityOfPhysicalViolence (exp(regressionPhysicalViolence) / denominator-be) /  time-step
+     
+  let _probabilityOfInjuryViolence (exp(regressionInjuryViolence) / denominator-be) / time-step
+     
+  set isHurtPhysically? boolean? _probabilityOfPhysicalViolence
+  
+  set isHurtInjuriously? boolean? _probabilityOfInjuryViolence
+                                                                                            
+end
+
+
+
+to violence-update-counts
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;  
+    
+  if (isHurtPhysically? = true)
+    [
+      set totalViolenceActs totalViolenceActs + 1 ]
+  
+  if (isHurtInjuriously? = true)
+    [
+      set totalViolenceActs totalViolenceActs + 1 ]
+     
+  ifelse (timeCount < time-step)
+    [         
+      if (isHurtPhysically? = true)
+        [
+          array:set totalViolenceIncidenceRate 0 array:item totalViolenceIncidenceRate 0 + 1
+        
+          if (booleanWhite = 1) [ array:set totalViolenceIncidenceRate 1 array:item totalViolenceIncidenceRate 1 + 1]
+        
+          if (booleanBlack = 1) [  array:set totalViolenceIncidenceRate 2 array:item totalViolenceIncidenceRate 2 + 1]
+          
+          if (booleanHispanic = 1) [  array:set totalViolenceIncidenceRate 3 array:item totalViolenceIncidenceRate 3 + 1 ]  
+        
+          set monthlyCountActsPerPerson monthlyCountActsPerPerson + 1 
+          set monthlyPhysicalInjuries monthlyPhysicalInjuries + 1
+        ]
+      
+      if (isHurtInjuriously? = true)
+      [
+        array:set totalViolenceIncidenceRate 0 array:item totalViolenceIncidenceRate 0 + 1
+        
+        if (booleanWhite = 1) [ array:set totalViolenceIncidenceRate 1 array:item totalViolenceIncidenceRate 1 + 1]
+        
+        if (booleanBlack = 1) [ array:set totalViolenceIncidenceRate 2 array:item totalViolenceIncidenceRate 2 + 1]
+        
+        if (booleanHispanic = 1) [ array:set totalViolenceIncidenceRate 3 array:item totalViolenceIncidenceRate 3 + 1 ]  
+        
+        set monthlyCountActsPerPerson monthlyCountActsPerPerson + 1 
+        set monthlyInjuriousInjuries monthlyInjuriousInjuries + 1 
+      ]
+
+          
+    ][ 
+  set totalViolenceIncidenceRate array:from-list n-values 4 [0]
+      
+  set monthlyCountActsPerPerson 0 
+  set monthlyPhysicalInjuries 0
+  set monthlyInjuriousInjuries 0 
+    
+    ] 
+   
+  
+end
